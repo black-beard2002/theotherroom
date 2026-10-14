@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>The Other Room — Selected Projects</title>
+  <meta name="description" content="The Other Room is a design studio making the familiar feel unexpected.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Instrument+Serif&family=Permanent+Marker&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <script type="importmap">
+    { "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"
+    } }
+  </script>
+</head>
+<body>
+  <header class="top">
+    <a class="logo" href="#" aria-label="The Other Room — home">THE OTHER <span>ROOM</span></a>
+    <nav class="nav" aria-label="Main">
+      <a href="#work">WORK</a>
+      <a href="#about">ABOUT</a>
+      <a href="mailto:hello@otherroom.co">CONTACT</a>
+    </nav>
+  </header>
+
+  <p class="side side--left" id="work">SELECTED<br>PROJECTS</p>
+  <p class="side side--right" id="about">MAKING THE FAMILIAR<br>FEEL&nbsp;&nbsp;UNEXPECTED</p>
+  <p class="scroll-hint">SCROLL<br>TO EXPLORE</p>
+  <address class="contact">
+    <a href="tel:+96178774737">+961 78 77 47 37</a>
+    <a href="mailto:hello@otherroom.co">HELLO@OTHERROOM.CO</a>
+  </address>
+
+  <main class="stage" id="stage">
+    <div class="scene" id="scene">
+      <span class="ring"></span>
+      <span class="ring"></span>
+      <canvas class="knot" id="knot" aria-hidden="true"></canvas>
+
+      <!-- Focus-plane projects -->
+      <button class="card" data-id="human" data-title="Humane" data-meta="Digital product · Web · 2025" aria-label="Open project: A more human internet">
+        <span class="slab"></span><span class="slab"></span><span class="slab"></span>
+        <span class="face face--human">
+          <span class="mk-nav"><span class="mk-logo mk-serif">Humane</span><span class="mk-links"><span>Work</span><span>Studio</span><span>About</span><span>Journal</span></span><span class="mk-btn mk-btn--sm">Contact</span></span>
+          <span class="mk-h" style="left:34px;top:100px;font-size:51px">A more<br>human internet</span>
+          <span class="mk-p" style="left:28px;top:212px;width:230px">We design digital products that feel considered, calm and unmistakably human — built for the people who use them.</span>
+          <span class="mk-btn" style="left:28px;top:266px">Learn more &rarr;</span>
+          <img class="mk-img" src="assets/img/mountain.jpg" alt="" style="left:368px;top:100px;width:200px;height:272px;filter:grayscale(.55) contrast(1.05)">
+          <span class="mk-tag" style="left:520px;top:350px">01</span>
+        </span>
+      </button>
+
+      <button class="card" data-id="blusk" data-title="Blusk" data-meta="Brand identity · Launch site · 2025" aria-label="Open project: Blusk">
+        <span class="slab"></span><span class="slab"></span><span class="slab"></span>
+        <span class="face face--blusk">
+          <span class="mk-planet"></span>
+          <span class="mk-nav"><span class="mk-logo mk-serif">Blusk</span><span class="mk-links"><span>Mission</span><span>Crew</span><span>Archive</span></span><span class="mk-btn mk-btn--sm">Reserve a seat</span></span>
+          <span class="mk-h" style="left:30px;top:106px;font-size:66px">Blusk</span>
+          <span class="mk-p" style="left:30px;top:214px;width:170px">A journey to the edge of the red world. Departures from 2031.</span>
+          <span class="mk-p" style="left:30px;bottom:30px;width:200px">Explore the mission<br><b>Read the brief &rarr;</b></span>
+          <span class="mk-rule" style="right:34px;top:70px;height:120px"></span>
+        </span>
+      </button>
+
+      <button class="card" data-id="spaces" data-title="Maison Lumen" data-meta="Hospitality · Interiors · 2024" aria-label="Open project: Spaces that feel alive">
+        <span class="slab"></span><span class="slab"></span><span class="slab"></span>
+        <span class="face face--spaces">
+          <img class="mk-img" src="assets/img/restaurant.jpg" alt="" style="left:46%;top:0;width:54%;height:100%;filter:brightness(.78) saturate(.9) sepia(.18)">
+          <span class="mk-fade"></span>
+          <span class="mk-nav"><span class="mk-logo mk-serif">Maison Lumen</span><span class="mk-links"><span>Menu</span><span>Rooms</span><span>Events</span><span>Visit</span></span></span>
+          <span class="mk-h" style="left:30px;top:122px;font-size:49px">Spaces<br>that feel alive</span>
+          <span class="mk-p" style="left:30px;top:232px;width:200px">Warm rooms, long tables and light that lingers. A place to gather, slowly.</span>
+          <span class="mk-btn" style="left:30px;top:284px">&#9654;&nbsp; Book a table</span>
+        </span>
+      </button>
+
+      <button class="card" data-id="food" data-title="Verde Kitchen" data-meta="Restaurant · Brand & Web · 2024" aria-label="Open project: Good food brighter days">
+        <span class="slab"></span><span class="slab"></span><span class="slab"></span>
+        <span class="face face--food">
+          <span class="mk-nav"><span class="mk-logo mk-serif">Verde</span><span class="mk-links"><span>Menu</span><span>Story</span><span>Visit</span></span><span class="mk-tag">Reserve</span></span>
+          <span class="mk-h" style="left:30px;top:108px;font-size:52px">Good food<br>brighter days</span>
+          <span class="mk-p" style="left:30px;top:238px;width:190px">Seasonal plates made with care, served all day in the heart of the city.</span>
+          <span class="mk-dot" style="left:30px;bottom:30px">Menu</span>
+          <span class="mk-p" style="left:88px;bottom:44px;width:120px">Open daily<br>08:00 — 22:00</span>
+          <img class="mk-img" src="assets/img/food.jpg" alt="" style="left:316px;top:46px;width:214px;height:306px;filter:saturate(.5) contrast(1.05)">
+          <span class="mk-tag" style="right:30px;bottom:24px">Since 2014</span>
+        </span>
+      </button>
+
+      <button class="card" data-id="nexa" data-title="NEXA" data-meta="Brand strategy · Website · 2025" aria-label="Open project: Ideas that move brands forward">
+        <span class="slab"></span><span class="slab"></span><span class="slab"></span>
+        <span class="face face--nexa">
+          <img class="mk-img mk-rock" src="assets/img/rock.jpg" alt="">
+          <span class="mk-wordmark">NEXA</span>
+          <span class="mk-nav mk-nav--center"><span class="mk-links"><span>Work</span><span>Services</span><span>Insights</span></span></span>
+          <span class="mk-h" style="left:32px;top:110px;font-size:44px">Ideas<br>that move<br>brands forward</span>
+          <span class="mk-p" style="left:32px;top:258px;width:200px">Strategy, identity and digital experiences for brands that refuse to stand still.</span>
+          <span class="mk-btn" style="left:32px;top:306px">Start a project &rarr;</span>
+          <span class="mk-btn mk-btn--dark" style="right:24px;bottom:22px">Let&rsquo;s talk</span>
+        </span>
+      </button>
+
+      <button class="card" data-id="orbit" data-title="Orbit" data-meta="Fashion · Campaign site · 2025" aria-label="Open project: Orbit">
+        <span class="slab"></span><span class="slab"></span><span class="slab"></span>
+        <span class="face face--orbit">
+          <svg class="mk-figure" viewBox="0 0 200 260" aria-hidden="true">
+            <path d="M70 78c-4 10-8 18-16 26l6 6c-2 4 0 8-2 12 2 4 3 8 2 12 2 10 14 16 28 16l6 20c-24 8-54 16-68 36L14 262h182c-4-34-12-64-36-78l-22-14c4-18 8-40 8-64 0-12-2-22-4-30z"/>
+            <path d="M56 74c2-32 14-54 44-56 30 2 42 24 44 56z"/>
+            <ellipse cx="100" cy="74" rx="78" ry="13"/>
+          </svg>
+          <span class="mk-nav"><span class="mk-logo mk-serif">Orbit</span><span class="mk-links"><span>Collection</span><span>Lookbook</span><span>Stores</span></span></span>
+          <span class="mk-h" style="left:34px;top:136px;font-size:70px">Orbit</span>
+          <span class="mk-p" style="left:34px;top:232px;width:150px">Autumn / Winter collection. Quiet shapes for loud cities.</span>
+          <span class="mk-p" style="left:34px;bottom:30px;width:210px">Discover the collection &rarr;<br>Free shipping on all orders</span>
+          <span class="mk-rule" style="right:40px;top:80px;height:200px"></span>
+        </span>
+      </button>
+
+      <!-- Out-of-focus projects -->
+      <button class="card" data-id="dusk" data-title="Ember Hall" data-meta="Hospitality · Web · 2023" aria-label="Open project: Ember Hall">
+        <span class="slab"></span><span class="slab"></span><span class="slab"></span>
+        <span class="face face--dark"><img class="mk-img" src="assets/img/dining.jpg" alt="" style="left:40%;top:0;width:60%;height:100%;filter:brightness(.55)"><span class="mk-h" style="left:30px;top:130px;font-size:44px">Evenings,<br>slowly</span></span>
+      </button>
+      <button class="card" data-id="mist" data-title="Still" data-meta="Photography · Portfolio · 2024" aria-label="Open project: Still">
+        <span class="slab"></span><span class="slab"></span><span class="slab"></span>
+        <span class="face face--light"><img class="mk-img" src="assets/img/portrait-a.jpg" alt="" style="left:34%;top:12%;width:32%;height:76%;filter:grayscale(1)"></span>
+      </button>
+      <button class="card" data-id="sky" data-title="Aster Homes" data-meta="Architecture · Web · 2024" aria-label="Open project: Aster Homes">
+        <span class="slab"></span><span class="slab"></span><span class="slab"></span>
+        <span class="face face--sky"><img class="mk-img" src="assets/img/building.jpg" alt="" style="left:50%;top:12%;width:40%;height:76%"><span class="mk-h" style="left:32px;top:140px;font-size:46px;color:#25324d">Timeless<br>homes</span></span>
+      </button>
+      <button class="card" data-id="stone" data-title="Atelier Noir" data-meta="Menswear · E-commerce · 2023" aria-label="Open project: Atelier Noir">
+        <span class="slab"></span><span class="slab"></span><span class="slab"></span>
+        <span class="face face--light"><img class="mk-img" src="assets/img/portrait-a.jpg" alt="" style="left:8%;top:10%;width:46%;height:80%;filter:grayscale(1)"><span class="mk-h" style="left:330px;top:150px;font-size:40px">Made<br>to last</span></span>
+      </button>
+      <button class="card" data-id="ink" data-title="Grain" data-meta="Film studio · Web · 2023" aria-label="Open project: Grain">
+        <span class="slab"></span><span class="slab"></span><span class="slab"></span>
+        <span class="face face--dark"><img class="mk-img" src="assets/img/portrait-b.jpg" alt="" style="left:20%;top:0;width:60%;height:100%;filter:grayscale(.6) brightness(.7)"></span>
+      </button>
+      <button class="card" data-id="paper" data-title="Folio" data-meta="Editorial · Web · 2024" aria-label="Open project: Folio">
+        <span class="slab"></span><span class="slab"></span><span class="slab"></span>
+        <span class="face face--light"><img class="mk-img" src="assets/img/portrait-c.jpg" alt="" style="left:52%;top:14%;width:36%;height:72%;filter:grayscale(1) contrast(1.1)"><span class="mk-h" style="left:32px;top:150px;font-size:40px">Folio</span></span>
+      </button>
+      <button class="card" data-id="lilac" data-title="Shoreline" data-meta="Travel · Booking site · 2024" aria-label="Open project: Shoreline">
+        <span class="slab"></span><span class="slab"></span><span class="slab"></span>
+        <span class="face face--lilac"><img class="mk-img" src="assets/img/sunset.jpg" alt="" style="left:6%;top:12%;width:52%;height:62%"><span class="mk-h" style="left:390px;top:130px;font-size:42px;color:#2a2d5c">Slow<br>the days</span><span class="mk-dot" style="right:34px;bottom:30px;background:#2a2d5c">Go</span></span>
+      </button>
+      <button class="card" data-id="blank" data-title="Hush" data-meta="Wellness · App · 2023" aria-label="Open project: Hush">
+        <span class="slab"></span><span class="slab"></span><span class="slab"></span>
+        <span class="face face--light"><span class="mk-h" style="left:32px;top:150px;font-size:44px;color:#9a9a9a">Hush</span></span>
+      </button>
+      <button class="card" data-id="rose" data-title="Palma" data-meta="Resort · Web · 2025" aria-label="Open project: Palma">
+        <span class="slab"></span><span class="slab"></span><span class="slab"></span>
+        <span class="face face--rose"><img class="mk-img" src="assets/img/palm.jpg" alt="" style="left:8%;top:14%;width:40%;height:72%;filter:sepia(.25) saturate(.8)"><span class="mk-h" style="left:330px;top:130px;font-size:46px;color:#5b3b3b">Soft<br>land</span></span>
+      </button>
+    </div>
+  </main>
+
+  <div class="caption" id="caption" aria-live="polite">
+    <span class="caption__title"></span>
+    <span class="caption__meta"></span>
+    <span class="caption__hint">Click anywhere or press Esc to close</span>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
