@@ -281,35 +281,29 @@
   // ---------- The red knot (three.js, loaded on demand) ----------
   async function initKnot() {
     const canvas = document.getElementById('knot');
-    const [THREE, { GLTFLoader }, { DRACOLoader }] = await Promise.all([
+    const [THREE, { GLTFLoader }, { DRACOLoader }, { RGBELoader }] = await Promise.all([
       import('three'), import('three/addons/loaders/GLTFLoader.js'), import('three/addons/loaders/DRACOLoader.js'),
+      import('three/addons/loaders/RGBELoader.js'),
     ]);
 
     const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
     renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 0.82;
 
     const scene3 = new THREE.Scene();
-    // a dark studio with white softboxes: deep red body, crisp white highlights
-    const studio = new THREE.Scene();
-    studio.background = new THREE.Color(0x3a3a3a);
-    const softbox = (w, h, x, y, z, power) => {
-      const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ color: new THREE.Color(power, power, power), side: THREE.DoubleSide }));
-      m.position.set(x, y, z); m.lookAt(0, 0, 0); studio.add(m);
-    };
-    softbox(8, 2.4, 0, 5, 1.5, 6);     // overhead strip
-    softbox(2, 7, -5, 1, 2.5, 4);      // left strip
-    softbox(1.6, 6, 5.5, 0, 0.5, 2);   // right strip
-    softbox(10, 4, 0, 0.5, 6, 2);      // front fill
-    softbox(14, 14, 0, -6, 0, 0.9);    // white floor bounce
+    // the studio around the logo, recovered from the logo's product shots: each reflection seen in those photos was
+    // traced back to the direction it came from (128 × 64 equirect, camera looking down -Z)
+    const studio = await new RGBELoader().loadAsync('assets/r-logo-env.hdr');
     const pmrem = new THREE.PMREMGenerator(renderer);
-    scene3.environment = pmrem.fromScene(studio, 0.02).texture;
+    scene3.environment = pmrem.fromEquirectangular(studio).texture;
+    studio.dispose();
+    pmrem.dispose();
     const camera = new THREE.PerspectiveCamera(30, 1, 10, 20000);
 
-    // The "R": a light copy of the sculpted GLB (same geometry, Draco-compressed); its baked textures, which showed as
-    // grey paint-like patches, are replaced in the file by a flat crimson chrome (#C8321F, metal 1, roughness 0.01)
+    // The "R": a light copy of the sculpted GLB (same geometry, Draco-compressed), finished as glossy red chrome
     const LOGO_H = 355;      // on-screen height in reference px, same as the earlier procedural R
-    const FRONT_YAW = 325;   // model yaw (deg) that shows the logo's front view
+    const FRONT_YAW = 355, FRONT_TILT = -2;   // resting view (deg), matched to the logo's main product shot
     const draco = new DRACOLoader().setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/libs/draco/gltf/');
     const gltf = await new GLTFLoader().setDRACOLoader(draco).loadAsync('assets/r-logo.glb');
     draco.dispose();
@@ -322,6 +316,9 @@
     fit.rotation.y = FRONT_YAW * DEG;
     let mesh;
     model.traverse((o) => { if (o.isMesh) mesh = o; });
+    // colour, metal, gloss and coat fitted to the product shots under the studio above
+    mesh.material.dispose();
+    mesh.material = new THREE.MeshPhysicalMaterial({ color: 0xef0c00, metalness: 0.975, roughness: 0.02, clearcoat: 0.25, clearcoatRoughness: 0.03 });
     const body = new THREE.Group();
     body.add(fit);
     const holder = new THREE.Group();
@@ -347,7 +344,7 @@
         spinV *= Math.pow(0.95, dt);
         wobble *= Math.pow(0.94, dt);
         const idle = reduceMotion ? 0 : 1;
-        holder.rotation.set(0.1 + my * 0.35 + Math.sin(t * 0.5) * 0.03 * idle, mx * 0.5 + th * 0.35 + spin, Math.sin(t * 0.4) * 0.025 * idle);
+        holder.rotation.set(FRONT_TILT * DEG + my * 0.35 + Math.sin(t * 0.5) * 0.03 * idle, mx * 0.5 + th * 0.35 + spin, Math.sin(t * 0.4) * 0.025 * idle);
         holder.position.set(KNOT_OFFSET.x * sc, (-KNOT_OFFSET.y + Math.sin(t * 0.8) * 5 * idle) * sc, 0);
         const w = Math.sin(t * 16) * 0.07 * wobble;
         body.scale.set(1 + w, 1 - w, 1 + w * 0.5);
