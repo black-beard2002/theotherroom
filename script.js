@@ -9,26 +9,17 @@
   const DEG = Math.PI / 180;
   const KNOT_OFFSET = { x: -18, y: 10 };                     // knot centre relative to the scene centre
   const FOCUS_Z = 420, FOCUS_Y = -24;                        // where a focused card hangs, square to the viewer
-  const AXIS = [0, -Math.sin(30 * DEG), Math.cos(30 * DEG)]; // orbit axis: the view axis tipped back 30°
   const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  // Home poses. Focus-plane cards were solved from the reference's measured corners
-  // (max 3px error at P = 2200). Out-of-focus cards use the screen centre (sx, sy) and width (sw)
-  // read off the reference, pushed to depth z — depth drives their blur.
-  const POSES = {
-    clap:         { x: -196, y: -277, z: 0, rx: 28.7, ry: 33.6, rz: -0.2, w: 241 },
-    iris:         { x: 203,  y: -283, z: 0, rx: 27.9, ry: -27.8, rz: 2.2, w: 226 },
-    yamas:        { x: -416, y: -76,  z: 0, rx: 15.3, ry: 48.8, rz: -0.2, w: 263 },
-    skybar:       { x: 419,  y: -15,  z: 0, rx: 17,   ry: -51.8, rz: 1.8, w: 252 },
-    humburg:      { x: -191, y: 278,  z: 0, rx: 34.4, ry: 36.8, rz: -0.5, w: 257 },
-    functionalab: { x: 175,  y: 247,  z: 0, rx: 33.1, ry: -28.9, rz: -1.3, w: 273 },
-    madamebun:    { sx: 410,  sy: 312, sw: 130, z: -380, rx: 25, ry: 45,  rz: 8 },
-    platsduchef:  { sx: 1222, sy: 297, sw: 135, z: -260, rx: 24, ry: -34, rz: -9 },
-    loq:          { sx: 1068, sy: 408, sw: 125, z: -420, rx: 14, ry: -30, rz: -4 },
-    lyne:         { sx: 340,  sy: 637, sw: 180, z: 210,  rx: 20, ry: 34,  rz: 6 },
-    fleurdelys:   { sx: 800,  sy: 697, sw: 80,  z: -650, rx: 22, ry: 8,   rz: 2 },
-    hoof:         { sx: 1230, sy: 702, sw: 150, z: -260, rx: 20, ry: -30, rz: -5 },
-  };
+  // Floating layout. Every load scatters the projects on a ring around the logo: an even spacing with jitter, a random
+  // radial position between the logo and the screen edge, a random depth and size. The ring turns with scroll, drag and
+  // the arrow keys; radius and size are re-solved each frame from the viewport, so no card meets the logo or leaves the
+  // screen at any angle or screen size.
+  const LOGO_A = 200, LOGO_B = 195;   // logo keep-out half-axes around the knot centre (reference px)
+  const CARD_W = 250;                 // largest card width (reference px)
+  const RING_TILT = 140;              // depth swing: cards come forward at the bottom of the ring and recede at the top
+  const EDGE = { side: 20, top: 72, bottom: 120 };   // CSS px kept clear for the header and the contact block
+  const IDLE_SPIN = 0.0005;           // rad per 60fps frame: the ring drifts, so no project stays out of focus
 
   // ---------- Math helpers ----------
   const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
@@ -37,16 +28,7 @@
   const approach = (rate, dt) => 1 - Math.pow(1 - rate, dt);   // frame-rate independent easing
   const rotX = (p, a) => { const c = Math.cos(a), s = Math.sin(a); return [p[0], p[1] * c - p[2] * s, p[1] * s + p[2] * c]; };
   const rotY = (p, a) => { const c = Math.cos(a), s = Math.sin(a); return [p[0] * c + p[2] * s, p[1], -p[0] * s + p[2] * c]; };
-  function rotAxis(p, k, a) {   // Rodrigues' rotation of p about unit axis k
-    const c = Math.cos(a), s = Math.sin(a);
-    const d = (k[0] * p[0] + k[1] * p[1] + k[2] * p[2]) * (1 - c);
-    return [
-      p[0] * c + (k[1] * p[2] - k[2] * p[1]) * s + k[0] * d,
-      p[1] * c + (k[2] * p[0] - k[0] * p[2]) * s + k[1] * d,
-      p[2] * c + (k[0] * p[1] - k[1] * p[0]) * s + k[2] * d,
-    ];
-  }
-  const blurAt = (z) => Math.min(4.5, Math.max(0, Math.abs(z) - 90) * 0.015);  // depth of field
+  const rand = (a, b) => a + Math.random() * (b - a);
   const facing = (x) => -40 * Math.tanh(x / 260);   // cards turn toward the centre as they orbit
 
   // ---------- DOM ----------
@@ -54,17 +36,23 @@
   const scene = document.getElementById('scene');
   const caption = document.getElementById('caption');
 
-  const cards = [...scene.querySelectorAll('.card')].map((el, i) => {
-    const p = POSES[el.dataset.id];
-    if (p.sx !== undefined) {
-      const k = P / (P - p.z);
-      Object.assign(p, { x: (p.sx - REF_W / 2) / k, y: (p.sy - REF_H / 2) / k, w: p.sw / (k * Math.cos(p.ry * DEG)) });
-    }
+  const cardEls = [...scene.querySelectorAll('.card')];
+  const slots = cardEls.map((_, i) => i);
+  for (let i = slots.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [slots[i], slots[j]] = [slots[j], slots[i]]; }
+  const spin0 = rand(0, 2 * Math.PI);
+  const cards = cardEls.map((el, i) => {
+    const slot = slots[i];
+    const ring = {
+      angle: spin0 + ((slot + rand(-0.2, 0.2)) / cardEls.length) * 2 * Math.PI,
+      u: slot % 2 ? rand(0.5, 1) : rand(0, 0.5),   // ring neighbours alternate inner/outer so they don't stack
+      zLayer: rand(-200, 40), w: CARD_W * rand(0.82, 1),
+      rx: rand(-3, 3), ry: rand(-6, 6), rz: rand(-3, 3),
+    };
     const shadow = document.createElement('span');
     shadow.className = 'shadow';
     scene.insertBefore(shadow, scene.querySelector('.card'));
     const c = {
-      el, shadow, pose: p,
+      el, shadow, ring,
       phase: i * 1.7,
       stiff: 0.05 + (i % 5) * 0.012,
       isHover: false, hover: 0, focus: 0,
@@ -81,7 +69,7 @@
   const pointer = { x: innerWidth / 2, y: innerHeight / 2, nx: 0, ny: 0, inside: false, moved: false };
   const smooth = { x: 0, y: 0, vx: 0, vy: 0 };
   const drag = { active: false, moved: false, x0: 0, y0: 0, lastX: 0, lastT: 0 };
-  let theta = 0, thetaV = 0;
+  let theta = 0, thetaTarget = 0, thetaV = 0, idle = 0;   // scroll moves the target; the ring glides to it
   let focused = null, focusAmt = 0;
   let s = 1;            // reference px → CSS px
   let knot = null;
@@ -109,12 +97,43 @@
   }
 
   // ---------- Per-frame ----------
+  // where a card sits at ring parameter t: the widest size (up to its own) that fits between the logo and the screen
+  // edge on that side, at its radial position between those two bounds. t runs round an ellipse shaped like the free
+  // space, so evenly spaced cards stay evenly spread on wide and tall screens alike.
+  function place(c, t) {
+    const hx = (innerWidth / 2 - EDGE.side) / s, hyMid = (innerHeight / 2 - (EDGE.top + EDGE.bottom) / 2) / s;
+    const ex = (hx + LOGO_A) * Math.cos(t), ey = (hyMid + LOGO_B) * Math.sin(t), el = Math.hypot(ex, ey);
+    const cs = ex / el, sn = ey / el;
+    const z = c.ring.zLayer + RING_TILT * sn, pk = P / (P - z);
+    const hy = (innerHeight / 2 - (sn < 0 ? EDGE.top : EDGE.bottom)) / s;
+    // cap the size so the cards fit round the middle of the free space (Ramanujan's ellipse perimeter)
+    const a = (hx + LOGO_A) / 2, b = (hyMid + LOGO_B) / 2;
+    const wCap = (1.05 * Math.PI * (3 * (a + b) - Math.sqrt((3 * a + b) * (a + 3 * b)))) / cards.length;
+    const bounds = (w) => {
+      const hw = 0.54 * w * pk, hh = 0.405 * w * pk;   // half the card's on-screen box, +8% for its tilt and bob
+      // inner bound: the card's box, at radius r, has its nearest point exactly on the keep-out ellipse
+      const clear = (r) => { const x = r * cs, y = r * sn; return Math.hypot(clamp(0, x - hw, x + hw) / LOGO_A, clamp(0, y - hh, y + hh) / LOGO_B) >= 1; };
+      let lo = 0, hi = LOGO_A + LOGO_B + 2 * (hw + hh);
+      for (let i = 0; i < 14; i++) { const m = (lo + hi) / 2; if (clear(m)) hi = m; else lo = m; }
+      return [hi, Math.min((hx - hw) / Math.abs(cs), (hy - hh) / Math.abs(sn))];
+    };
+    let w = Math.min(c.ring.w, wCap), [rin, rout] = bounds(w);
+    if (rin > rout) {   // not enough room on this side (narrow phones): shrink the card until it fits
+      let lo = 0.35 * w, hi = w;
+      for (let i = 0; i < 10; i++) { const m = (lo + hi) / 2, [a, b] = bounds(m); if (a <= b) lo = m; else hi = m; }
+      w = lo; [rin, rout] = bounds(w);
+      rin = Math.min(rin, rout);   // a tiny viewport: stay on screen rather than clear of the logo
+    }
+    const r = lerp(rin, rout, c.ring.u);
+    return { x: (KNOT_OFFSET.x + r * cs) / pk, y: (KNOT_OFFSET.y + r * sn) / pk, z, w, sn };
+  }
+
   function updateCard(c, t, dt, ax, ay) {
-    const p = c.pose;
+    const p = place(c, c.ring.angle + theta + idle);
     const bob = reduceMotion ? 0 : Math.sin(t * 0.7 + c.phase) * 7;
 
-    // orbit, then drift toward the pointer (nearer cards more), then tilt with the pointer
-    let v = rotAxis([p.x, p.y + bob, p.z], AXIS, theta);
+    // drift toward the pointer (nearer cards more), then tilt with the pointer
+    let v = [p.x, p.y + bob, p.z];
     const depth = 1 + v[2] / 900;
     v[0] += smooth.x * 16 * depth;
     v[1] += smooth.y * 11 * depth;
@@ -146,12 +165,15 @@
     c.focus += ((focused === c ? 1 : 0) - c.focus) * approach(0.085, dt);
 
     let x = v[0] + c.push.x, y = v[1] + c.push.y, z = v[2] + c.push.z + c.hover * 60;
-    let rx = p.rx + smooth.y * 7 + c.lean.x;
-    let ry = p.ry + facing(x) - facing(p.x) + smooth.x * 10 + c.lean.y;
-    let rz = p.rz + c.lean.z;
+    let rx = c.ring.rx + 17 + 14 * Math.abs(p.sn) + smooth.y * 7 + c.lean.x;
+    let ry = c.ring.ry + facing(x) + smooth.x * 10 + c.lean.y;
+    let rz = c.ring.rz + c.lean.z;
     let scale = (p.w / FACE_W) * (1 + c.hover * 0.05);
-    let blur = blurAt(z) * (1 - c.hover);
-    let opacity = 1 - Math.min(0.3, Math.max(0, -z - 250) * 0.0006);
+    // depth of field from where the card is right now: sharp across the front of the ring (the lower half of the
+    // screen), softening toward the back; the ring keeps turning, so every project passes through focus
+    const dof = 1 - smoothstep(clamp(((1 + p.sn) / 2 - 0.12) / 0.45, 0, 1));
+    let blur = 4.5 * dof * (1 - c.hover);
+    let opacity = 1 - 0.28 * dof;
 
     if (focused && focused !== c) { blur += 5 * focusAmt; opacity *= 1 - 0.72 * focusAmt; }
     if (c.focus > 0.001) {          // fly to the front, square to the viewer
@@ -197,7 +219,8 @@
     smooth.vx = (smooth.x - px) / dt;
     smooth.vy = (smooth.y - py) / dt;
 
-    if (!drag.active) { theta += thetaV * dt; thetaV *= Math.pow(0.93, dt); }
+    if (!drag.active) theta += (thetaTarget - theta) * approach(0.045, dt);   // eases in, no overshoot
+    if (!reduceMotion && !focused && !drag.active) idle += IDLE_SPIN * dt;
     focusAmt += ((focused ? 1 : 0) - focusAmt) * approach(0.09, dt);
 
     const ax = -smooth.y * 5 * DEG, ay = smooth.x * 8 * DEG;
@@ -225,7 +248,7 @@
   stage.addEventListener('pointerdown', (e) => {
     if (e.button !== 0) return;
     setPointer(e);
-    Object.assign(drag, { active: true, moved: false, x0: e.clientX, y0: e.clientY, lastX: e.clientX, lastT: performance.now() });
+    Object.assign(drag, { active: true, moved: false, x0: e.clientX, y0: e.clientY, lastX: e.clientX, lastY: e.clientY, lastT: performance.now() });
   });
 
   addEventListener('pointermove', (e) => {
@@ -238,16 +261,19 @@
     }
     if (drag.moved) {
       const now = performance.now();
-      const d = ((e.clientX - drag.lastX) * 0.005) / Math.max(s, 0.4);
-      theta += d;
+      const d = ((e.clientX - drag.lastX - (e.clientY - drag.lastY)) * 0.005) / Math.max(s, 0.4);   // swipe up = scroll down
+      theta += d; thetaTarget = theta;
       thetaV = d / Math.max(1, (now - drag.lastT) / 16.667);
       drag.lastT = now;
     }
-    drag.lastX = e.clientX;
+    drag.lastX = e.clientX; drag.lastY = e.clientY;
   });
 
   addEventListener('pointerup', (e) => {
-    if (drag.active) { drag.active = false; stage.classList.remove('is-dragging'); }
+    if (drag.active) {
+      drag.active = false; stage.classList.remove('is-dragging');
+      if (drag.moved) thetaTarget = theta + clamp(thetaV, -0.05, 0.05) * 12;   // a gentle coast after a fling
+    }
     if (e.pointerType !== 'mouse') { pointer.nx = pointer.ny = 0; pointer.inside = false; }
   });
   addEventListener('pointercancel', () => { drag.active = false; stage.classList.remove('is-dragging'); });
@@ -264,14 +290,14 @@
   addEventListener('wheel', (e) => {
     e.preventDefault();
     const d = (Math.abs(e.deltaY) >= Math.abs(e.deltaX) ? e.deltaY : e.deltaX) * (e.deltaMode === 1 ? 16 : 1);
-    thetaV = clamp(thetaV + clamp(d, -120, 120) * 0.00011, -0.08, 0.08);
+    thetaTarget += clamp(d, -120, 120) * 0.0005;   // one wheel notch ≈ 3.4°
     if (focused) setFocus(null);
   }, { passive: false });
 
   addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && focused) setFocus(null);
-    else if (e.key === 'ArrowRight' || e.key === 'ArrowDown') thetaV += 0.012;
-    else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') thetaV -= 0.012;
+    else if (e.key === 'ArrowRight' || e.key === 'ArrowDown') thetaTarget += 0.1;
+    else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') thetaTarget -= 0.1;
   });
 
   addEventListener('resize', resize);
